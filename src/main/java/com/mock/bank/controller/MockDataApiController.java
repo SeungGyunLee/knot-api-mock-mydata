@@ -1,129 +1,181 @@
 package com.mock.bank.controller;
 
-import com.mock.bank.dto.MockAssetResponse;
-import org.springframework.web.bind.annotation.*;
-import java.util.*;
+import com.mock.bank.dto.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Collections;
 
 @RestController
-@RequestMapping("/v1/mock/data")
+@RequestMapping("/v1")
+@RequiredArgsConstructor
 public class MockDataApiController {
 
-    // ==========================================
-    // 1. Bank (은행) 조회 API
-    // GET /v1/mock/data/bank/accounts
-    // ==========================================
+    // 1. [은행] 개인수신계좌 목록 조회
     @GetMapping("/bank/accounts")
-    public MockAssetResponse<MockAssetResponse.BankAccount> getBankAccounts(@RequestHeader("Authorization") String token) {
-
-        // 1. 은행 데이터 생성
-        List<MockAssetResponse.BankAccount> list = new ArrayList<>();
-        list.add(MockAssetResponse.BankAccount.builder()
-                .accountNum("1234-56-7890")
-                .prodName("직장인우대통장")
+    public ResponseEntity<BankAcctResponse> getBankAccounts(
+            @RequestHeader("x-api-tran-id") String tranId,
+            @RequestHeader("x-user-search-id") String userSearchId,
+            @RequestHeader("Authorization") String token
+    ) {
+        BankAccountDto account = BankAccountDto.builder()
+                .bankName("우리은행") // 추가: MyDataSyncService가 이 값을 가져갑니다.
+                .accountNum("1002-123-423123")
+                .isConsent(true)
+                .seqno("")
+                .foreignDeposit(false)
+                .prodName("입출금통장")
                 .accountType("1001")
-                .balanceAmt("5400000")
-                .currencyCode("KRW")
-                .bankCode("004")
-                .bankName("KB국민은행")
-                .build());
-
-        // 2. 응답 리턴
-        return MockAssetResponse.<MockAssetResponse.BankAccount>builder()
-                .rspCode("00000")
-                .rspMsg("성공")
-                .resultCount(list.size())
-                .resultList(list)
+                .accountStatus("01")
+                .curPre("KRW")
+                .balanceAmt("1500000")
+                .withdrawableAmt("1500000")
+                .offeredRate("0.10")
+                .lastTranDate("20260125")
+                .isInvest(false)
                 .build();
+
+        return ResponseEntity.ok(BankAcctResponse.builder()
+                .rspCode("00000").rspMsg("성공")
+                .searchTimestamp("20260126123000").nextPage("")
+                .accountCnt(1).accountList(Collections.singletonList(account))
+                .build());
     }
 
-    // ==========================================
-    // 2. Card (카드) 조회 API
-    // GET /v1/mock/data/card/cards
-    // ==========================================
-    @GetMapping("/card/cards")
-    public MockAssetResponse<MockAssetResponse.Card> getCards(@RequestHeader("Authorization") String token) {
+    // 2. [은행] 개인형 IRP 목록 조회
+    @GetMapping("/bank/irps")
+    public ResponseEntity<BankIrpResponse> getBankIrps(
+            @RequestHeader("x-api-tran-id") String tranId
+    ) {
+        BankIrpDto irp = BankIrpDto.builder()
+                .bankName("우리은행") // 추가
+                .prodName("KB 개인형 IRP")
+                .accountNum("428-833-7777")
+                .isConsent(true)
+                .seqno("1")
+                .irpType("01")
+                .evalAmt("12000000")
+                .invPrincipal("10000000")
+                .fundNum("0")
+                .openDate("20220101")
+                .expDate("20320101")
+                .isIsa(false)
+                .build();
 
-        List<MockAssetResponse.Card> list = new ArrayList<>();
-        list.add(MockAssetResponse.Card.builder()
-                .cardId("c12345")
-                .cardNum("1234-****-****-5678")
-                .cardName("ZERO Edition2")
+        return ResponseEntity.ok(BankIrpResponse.builder()
+                .rspCode("00000").rspMsg("성공")
+                .searchTimestamp("20260126123000").nextPage("")
+                .irpCnt(1).irpList(Collections.singletonList(irp))
+                .build());
+    }
+
+    // 3. [카드] 카드 목록 조회
+    @GetMapping("/card/cards")
+    public ResponseEntity<CardResponse> getCards(
+            @RequestHeader("x-api-tran-id") String tranId
+    ) {
+        CardDto card = CardDto.builder()
+                .cardId("card_001")
+                .cardNum("2342-****-****-5621")
+                .cardName("현대카드 ZERO")
+                .isConsent(true)
                 .cardType("01")
+                .cardMember("01")
+                .annualFee("10000")
+                .issueDate("20230501")
+                .isTransPayable(true)
                 .paymentAmt("450000")
                 .cardCompanyCode("C01")
-                .cardCompanyName("현대카드")
-                .build());
-
-        return MockAssetResponse.<MockAssetResponse.Card>builder()
-                .rspCode("00000")
-                .rspMsg("성공")
-                .resultCount(list.size())
-                .resultList(list)
+                .cardCompanyName("현대카드") // 이미 잘 들어가 있으므로 그대로 유지
                 .build();
+
+        return ResponseEntity.ok(CardResponse.builder()
+                .rspCode("00000").rspMsg("성공")
+                .searchTimestamp("20260126123000").nextPage("")
+                .resultCount(1).resultList(Collections.singletonList(card))
+                .build());
     }
 
-    // ==========================================
-    // 3. Invest (증권) 조회 API
-    // GET /v1/mock/data/invest/accounts
-    // ==========================================
+    // 4. [금투] 계좌 목록 조회
     @GetMapping("/invest/accounts")
-    public MockAssetResponse<MockAssetResponse.SecurityAccount> getInvestAccounts(@RequestHeader("Authorization") String token) {
-
-        // 종목 리스트 (삼성전자)
-        List<MockAssetResponse.Product> products = new ArrayList<>();
-        products.add(MockAssetResponse.Product.builder()
-                .prodCode("005930")
-                .prodName("삼성전자")
-                .holdQty("100")
-                .evalAmt("7500000")
-                .earningRate("10.5")
-                .build());
-
-        // 증권 계좌 리스트
-        List<MockAssetResponse.SecurityAccount> list = new ArrayList<>();
-        list.add(MockAssetResponse.SecurityAccount.builder()
-                .accountNum("5555-8888-12")
-                .prodName("영웅문 종합위탁")
-                .totalEvalAmt("15600000")
-                .depositAmt("4600000")
-                .companyCode("S01")
-                .companyName("키움증권")
-                .products(products) // 종목 포함
-                .build());
-
-        return MockAssetResponse.<MockAssetResponse.SecurityAccount>builder()
-                .rspCode("00000")
-                .rspMsg("성공")
-                .resultCount(list.size())
-                .resultList(list)
+    public ResponseEntity<InvestAcctResponse> getInvestAccounts(
+            @RequestHeader("x-api-tran-id") String tranId
+    ) {
+        InvestAccountDto account = InvestAccountDto.builder()
+                .companyName("키움증권") // 추가: "정보없음" 해결
+                .accountNum("555-88-231256")
+                .isConsent(true)
+                .accountName("키움 종합매매")
+                .accountType("101")
+                .accountStatus("01")
+                .issueDate("20240101")
+                .isTaxBenefits(false)
+                .withdrawableAmt("500000")
+                .evalAmt("15600000")
+                .currencyCode("KRW")
                 .build();
+
+        return ResponseEntity.ok(InvestAcctResponse.builder()
+                .rspCode("00000").rspMsg("성공")
+                .searchTimestamp("20260126123000").nextPage("")
+                .accountCnt(1).accountList(Collections.singletonList(account))
+                .build());
     }
 
-    // ==========================================
-    // 4. Insurance (보험) 조회 API
-    // GET /v1/mock/data/insu/contracts
-    // ==========================================
-    @GetMapping("/insu/contracts")
-    public MockAssetResponse<MockAssetResponse.Insurance> getInsuContracts(@RequestHeader("Authorization") String token) {
+    // 5. [금투] 개인형 IRP 목록 조회 (키움증권으로 통일)
+    @GetMapping("/invest/irps")
+    public ResponseEntity<InvestIrpResponse> getInvestIrps(
+            @RequestHeader("x-api-tran-id") String tranId
+    ) {
+        InvestIrpDto irp = InvestIrpDto.builder()
+                .companyName("키움증권") // "미래에셋"에서 "키움증권"으로 변경하여 통일
+                .accountNum("929-17-223112")
+                .isConsent(true)
+                .prodName("키움 개인형 IRP 계좌") // "IRP" 키워드 포함 확인
+                .irpType("201")
+                .evalAmt("25000000")
+                .invPrincipal("20000000")
+                .openDate("20200501")
+                .expDate("20300501")
+                .currencyCode("KRW")
+                .build();
 
-        List<MockAssetResponse.Insurance> list = new ArrayList<>();
-        list.add(MockAssetResponse.Insurance.builder()
-                .insuNum("100-200-300")
+        return ResponseEntity.ok(InvestIrpResponse.builder()
+                .rspCode("00000").rspMsg("성공")
+                .searchTimestamp("20260126123000").nextPage("")
+                .irpCnt(1).irpList(Collections.singletonList(irp))
+                .build());
+    }
+
+    // 6. [보험] 보험 목록 조회
+    @GetMapping("/insu/contracts")
+    public ResponseEntity<InsuResponse> getInsuContracts(
+            @RequestHeader("x-api-tran-id") String tranId
+    ) {
+        InsuDto insu = InsuDto.builder()
+                .companyName("삼성화재") // 추가: "정보없음" 해결
+                .insuNum("100-200-30000")
+                .isConsent(true)
                 .prodName("삼성화재 실손보험")
                 .insuType("03")
                 .insuStatus("01")
+                .isRenewable(true)
+                .issueDate("20200101")
+                .expDate("20801231")
                 .faceAmt("50000000")
-                .paidAmt("12000")
-                .expDate("2030-12-31")
-                .companyCode("I01")
-                .companyName("삼성화재")
-                .build());
-
-        return MockAssetResponse.<MockAssetResponse.Insurance>builder()
-                .rspCode("00000")
-                .rspMsg("성공")
-                .resultCount(list.size())
-                .resultList(list)
+                .currencyCode("KRW")
+                .isVariable(false)
+                .isUniversal(false)
                 .build();
+
+        return ResponseEntity.ok(InsuResponse.builder()
+                .rspCode("00000").rspMsg("성공")
+                .searchTimestamp("20260126123000").nextPage("")
+                .insuCnt(1).insuList(Collections.singletonList(insu))
+                .build());
     }
 }
