@@ -1,5 +1,5 @@
 # 1. Java 8 (OpenJDK 8) 베이스 이미지 사용
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:8-jdk-alpine
 
 # 2. 컨테이너 내 작업 디렉토리 설정
 WORKDIR /app
