@@ -28,7 +28,7 @@ public class MockDataApiController {
                 .isConsent(true)
                 .seqno("")
                 .foreignDeposit(false)
-                .prodName("입출금통장")
+                .prodName("우리 SUPER주거래 통장")
                 .accountType("1001")
                 .accountStatus("01")
                 .curPre("KRW")
@@ -53,7 +53,7 @@ public class MockDataApiController {
     ) {
         BankIrpDto irp = BankIrpDto.builder()
                 .bankName("우리은행") // 추가
-                .prodName("KB 개인형 IRP")
+                .prodName("개인형IRP")
                 .accountNum("428-833-7777")
                 .isConsent(true)
                 .seqno("1")
@@ -132,10 +132,10 @@ public class MockDataApiController {
             @RequestHeader("x-api-tran-id") String tranId
     ) {
         InvestIrpDto irp = InvestIrpDto.builder()
-                .companyName("키움증권") // "미래에셋"에서 "키움증권"으로 변경하여 통일
+                .companyName("키움증권")
                 .accountNum("929-17-223112")
                 .isConsent(true)
-                .prodName("키움 개인형 IRP 계좌") // "IRP" 키워드 포함 확인
+                .prodName("키움 중개형 ISA")
                 .irpType("201")
                 .evalAmt("25000000")
                 .invPrincipal("20000000")
